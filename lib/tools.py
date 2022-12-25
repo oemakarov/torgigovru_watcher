@@ -71,38 +71,6 @@ def users_prepare_sql() -> list[dict]:
     return result
 
 
-# def users_prepare_sql() -> dict:
-#     users = sql.get_users()
-#     print(users)
-
-#     result = {}
-#     for k in users:
-#         searches = sql.get_user_search(user_id=k)
-#         print(searches)
-#         result.update({k : search_pattern_prepare(searches)}) 
-#             # print('    ', v)
-#         # for v in searches:
-#         # print(result)
-
-#     # print(result)
-#     return result
-
-
-    # result = {}
-    # for k, v in users.items():
-    #     result.update({k : search_pattern_prepare(v)}) 
-    # return result
-
-# def users_prepare(users:dict) -> dict:
-
-#     result = {}
-#     for k, v in users.items():
-#         result.update({k : search_pattern_prepare(v)}) 
-#     return result
-
-
-# ------------------------------
-
 def is_all_regex_in_str(input_str:str, regex_list:list) -> bool:
     """Проверяет вхождение всех шаблонов regex в строку.
     Если элемент regex_list - список шаблонов - вернется True если все шаблоны входят в строку
@@ -117,17 +85,8 @@ def is_all_regex_in_str(input_str:str, regex_list:list) -> bool:
     Raises:
         ValueError -- при передаче regex_list не список
     """
-    # result = []
-    # for item in regex_list:
-    #     result.append(re.search(item, input_str, flags=re.IGNORECASE))
-    # return all(result)
 
     return all([re.search(r, input_str, flags=re.IGNORECASE) for r in regex_list])
-# ------------------------------
-
-
-
-
 
 
 
