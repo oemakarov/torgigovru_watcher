@@ -212,23 +212,6 @@ def get_few_days_notice_list(deepnes:int) -> list[dict]:
     return few_days_notice_list
 
 
-# def users_prepare() -> list[dict]:
-#     users = sql.get_users()
-
-#     result ={}
-#     for u in users:
-#         searches = sql.get_user_search(user_id=u)
-#         s_data = []
-#         for s in searches:
-#             s_id, s_content = s
-#             s_pattern = search_pattern_prepare_one(s_content)
-#             s_data.append([s_id, s_pattern])
-
-#         result.update({u : s_data}) 
-#     return result
-
-
-
 
 def main():
 
@@ -249,8 +232,8 @@ def main():
     notice_todo = sql.get_notice_href_by_done(done=0)
     log.info(f'notice_todo = {len(notice_todo)}')
 
-
     users_search_data = users_prepare_sql()
+    log.info(f'{users_search_data = }')
 
     for href in notice_todo:
         print(f'{href = }') 

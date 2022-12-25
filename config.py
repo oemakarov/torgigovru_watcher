@@ -18,7 +18,7 @@ DAYS_DEEP_NOTICE_WATCH= 8
 
 BOT_TOKEN = secret.BOT_TOKEN
 TELEGRAM_MESSAGE_LIMIT = 4000 # длина сообщения в телеграм
-TELEGRAM_MESSAGE_CAPTION_LIMIT = 9000 #длина описания для картинки в телеграм
+TELEGRAM_MESSAGE_CAPTION_LIMIT = 900 #длина описания для картинки в телеграм
 IMG_SIZE_LIMIT = 20000000  # изображения до 20Mb, размером больше не будут обрабатываться для уменьшения
 IMG_MAX_SIZE_XY = 10000 # сумма сторон до которой уменьшается изображение 
 PROCESS_NOTICE_DELAY = 1 # задержка перед обработкой следующего извещения
