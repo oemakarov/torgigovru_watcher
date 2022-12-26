@@ -117,20 +117,21 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
             cut_len(
                         (
                             # f'{lot_title}'
-                            f'_{procedure_name}_\n\n' 
-                            f'*{elem(lot_name, end=config.EOL+config.EOL)}*' 
+                            f'{elem(lot_url, pre=" ", emoji="globe_with_meridians", end=config.EOL*2)}'
+                            f'_{procedure_name}_\n' 
+                            f'*{elem(lot_name, end=config.EOL*2)}*' 
                             f'{elem(lot_price_elem)}' 
                             f'{elem(lot_estate_address, emoji="compass")}'
 
                             f'{elem(lot_contract_years, text="Срок договора (лет)", emoji="calendar")}'
                             f'{elem(lot_contract_months, text="Срок договора (мес)", emoji="calendar")}'
                             f'{elem(bidd_end_time, text="Подача до", emoji="alarm_clock")}\n'
-                            f'`{elem(lot_description, emoji="flag_small", end=config.EOL+config.EOL)}`'
+                            f'`{elem(lot_description, emoji="flag_small", end=config.EOL*2)}`'
                             f'{lot_characteristics}'
                         )
                 , config.TELEGRAM_MESSAGE_CAPTION_LIMIT)
                 )
-        lot_info += f'{config.EOL} {elem(lot_url, pre=" ", emoji="globe_with_meridians")}'
+        # lot_info += f'{config.EOL} {elem(lot_url, pre=" ", emoji="globe_with_meridians")}'
 
         print(f'{lot_info = }')
 

@@ -1,7 +1,10 @@
 
-__version__ = '0.16'
+__version__ = '0.17'
 # 'москва+авто'
 # '*частьслова*+обособленноеслово+@92'
+
+# v0.17
+# - message new text order
 
 # v0.16
 # - message link to lot url
