@@ -8,8 +8,8 @@ def sql_start(sqlite_db_filename: str):
     cur = base.cursor()
 
 
-    if base:
-        print('data base - connected - OK')
+    # if base:
+    #     print('data base - connected - OK')
         
     cur.execute('''CREATE TABLE IF NOT EXISTS 
                         notice(

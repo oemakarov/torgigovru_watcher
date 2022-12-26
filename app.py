@@ -94,6 +94,18 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
         lot_contract_type = getget(lot_additional_details, 'DA_contractType', 'value', 'name')
         lot_contract_years = getget(lot_additional_details, 'DA_contractYears', 'value')
         lot_contract_months = getget(lot_additional_details, 'DA_contractMonths', 'value')
+        lot_contract_period = getget(lot_additional_details, 'DA_contractDate_EA(ZK)', 'value') or getget(lot_additional_details, 'DA_contractDate_PA(ZK)', 'value')
+
+        # print('DA_contractDate_EA(ZK) = ', getget(lot_additional_details, 'DA_contractDate_EA(ZK)', 'value'))
+        # print('DA_contractDate_PA(ZK) = ', getget(lot_additional_details, 'DA_contractDate_PA(ZK)', 'value'))
+        
+        # print(f'{lot_contract_period = }')
+        # print(f'{lot_contract_years = }')
+        # print(f'{lot_contract_months = }')
+
+        if not (lot_contract_years or lot_contract_months or lot_contract_period):
+            log.error(f'no period - {href =}')
+
         lot_yearly_price = getget_str(lot_additional_details, 'DA_yearlyPrice', 'value')
         lot_monthly_price = getget_str(lot_additional_details, 'DA_monthlyPrice', 'value')
         lot_payment_order = getget_str(lot_additional_details, 'DA_paymentOrder', 'value')
@@ -109,7 +121,6 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
         #         print(f'    {v.get("name")} = {v.get("value")}') 
 
         lot_price_elem = lot_monthly_price_elem or lot_yearly_price_elem or lot_price_min_elem
-        lot_contract_period = elem(lot_contract_years, end='')
         # lot_url = f'[{notice_number}]({href})'
         lot_url = f'[{notice_number}_lot{lot_number}](https://torgi.gov.ru/new/public/lots/lot/{notice_number}_{lot_number})'
 
@@ -117,12 +128,15 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
             cut_len(
                         (
                             # f'{lot_title}'
-                            f'{elem(lot_url, pre=" ", emoji="globe_with_meridians", end=config.EOL*2)}'
-                            f'_{procedure_name}_\n' 
+                            f'{elem(lot_url, end=config.EOL)}'
+                            # f'{elem(lot_url, pre=" ", emoji="globe_with_meridians", end=config.EOL)}'
+                            f'{elem(procedure_name, pre="_", end=f"_{config.EOL*2}")}'
+                            # f'_{procedure_name}_\n' 
                             f'*{elem(lot_name, end=config.EOL*2)}*' 
                             f'{elem(lot_price_elem)}' 
                             f'{elem(lot_estate_address, emoji="compass")}'
 
+                            f'{elem(lot_contract_period, text="Срок аренды", emoji="calendar")}'
                             f'{elem(lot_contract_years, text="Срок договора (лет)", emoji="calendar")}'
                             f'{elem(lot_contract_months, text="Срок договора (мес)", emoji="calendar")}'
                             f'{elem(bidd_end_time, text="Подача до", emoji="alarm_clock")}\n'
@@ -131,7 +145,6 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
                         )
                 , config.TELEGRAM_MESSAGE_CAPTION_LIMIT)
                 )
-        # lot_info += f'{config.EOL} {elem(lot_url, pre=" ", emoji="globe_with_meridians")}'
 
         print(f'{lot_info = }')
 
@@ -212,7 +225,7 @@ def get_few_days_notice_list(deepnes:int) -> list[dict]:
 
 
 def main():
-
+    
     log.info(f'-------------- START - {datetime.now()}')
     sql.sql_start(config.sqlite_db_filename)
     sql.sql_start_users(config.sqlite_db_users_filename)
@@ -234,7 +247,7 @@ def main():
     log.info(f'{users_search_data = }')
 
     for href in notice_todo:
-        print(f'{href = }') 
+        log.info(f'{href = }')
         try:
             ni = n.info(href)
         except:
@@ -248,6 +261,7 @@ def main():
                 for one_search in user_all_searches:
                     s_id, s_content = one_search
                     if config.DEBUG_PASS_ALL_NOTICE or is_all_regex_in_str(input_str=str(ni), regex_list=s_content): # в извещении есть искомое
+                        log.info(f'MATCH {user_id = } {s_content = }')
                         process_notification(notification_obj=n, notice_info=ni, bot=bot, chat_id=user_id)
                         sql.set_send_by_href(href)
                         sql.set_user_search_sended(s_id)
@@ -255,6 +269,7 @@ def main():
 
             sql.set_done_now_by_href(href)
             sleep(config.PROCESS_NOTICE_DELAY)
+    log.info('EXIT')
     
 
 if __name__ == '__main__':
