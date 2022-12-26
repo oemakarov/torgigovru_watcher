@@ -108,16 +108,17 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
         #         print(f'=== {k}') 
         #         print(f'    {v.get("name")} = {v.get("value")}') 
 
-
         lot_price_elem = lot_monthly_price_elem or lot_yearly_price_elem or lot_price_min_elem
         lot_contract_period = elem(lot_contract_years, end='')
-        lot_url = f'[{notice_number}]({href})'
+        # lot_url = f'[{notice_number}]({href})'
+        lot_url = f'[{notice_number}_lot{lot_number}](https://torgi.gov.ru/new/public/lots/lot/{notice_number}_{lot_number})'
+
         lot_info = close_tags(
             cut_len(
                         (
                             # f'{lot_title}'
-                            f'_{procedure_name}_\n' 
-                            # f'*{elem(lot_name)}*' 
+                            f'_{procedure_name}_\n\n' 
+                            f'*{elem(lot_name, end=config.EOL+config.EOL)}*' 
                             f'{elem(lot_price_elem)}' 
                             f'{elem(lot_estate_address, emoji="compass")}'
 
@@ -136,7 +137,7 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
         img_ids = [i for i in lot.get('imageIds', []) if i.get('size') < config.IMG_SIZE_LIMIT][:9] 
         # img_ids = list(filter(lambda i: i.get('size') < config.IMG_SIZE_LIMIT, lot.get('imageIds', [])))[:9]
 
-        if len(img_ids) > 1: # если есть изображения лота
+        if len(img_ids) > 1: # если несколько изображений лота
             media_group = []
             for attachment in img_ids:
                 ok, filename = notification_obj.attachment_content_save(content_id=attachment['id'], 
@@ -171,15 +172,35 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
 
 
 def process_error(href: str):
+    """обработка ошибки получения данных поста
+    вносим +1 в базу по данному url, выводим сообщение в логи
+
+    Args:
+        href (str): ссылка на данные при обращении к которым проихошла ошибка
+    """
     try_num = sql.get_try_num_by_href(href)
     sql.set_try_num_by_href(href, str(try_num + 1))
     if try_num > 2:
         log.error(f'cant get ni by url {href}\n{try_num =}')
 
 
-
-
 def get_few_days_notice_list(deepnes:int) -> list[dict]:
+    """Получение списка ссылок на данные извещений за несколько дней в глубину
+
+    Args:
+        deepnes (int): количество дней в глубину. натуральное число
+
+    Returns:
+        list[dict]: список со словарями 
+            {
+      "bidderOrgCode": "2100001469",
+      "rightHolderCode": "2100001469",
+      "documentType": "notice",
+      "regNum": "21000014690000000007",
+      "publishDate": "2022-07-07T00:01:30.593Z",
+      "href": "https://torgi.gov.ru/new/opendata/7710568760-notice/docs/notice_21000014690000000007_f99a356e-4165-48ab-aee9-5bcfae47f463.json"
+            },
+    """
     few_days_notice_list = []
     for d_num in range(-1, -deepnes, -1):
         one_day_notice_list = torgi.get_day_notice_list(day_index=d_num)
@@ -229,6 +250,7 @@ def main():
                         process_notification(notification_obj=n, notice_info=ni, bot=bot, chat_id=user_id)
                         sql.set_send_by_href(href)
                         sql.set_user_search_sended(s_id)
+                        sleep(config.TELEGRAM_MESSAGE_DELAY)
 
             sql.set_done_now_by_href(href)
             sleep(config.PROCESS_NOTICE_DELAY)
