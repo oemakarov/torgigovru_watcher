@@ -23,7 +23,7 @@ def sql_start(sqlite_db_filename: str):
                             done INTEGER DEFAULT 0, 
                             done_date TEXT, 
                             try_num INTEGER DEFAULT 1,
-                            send INTEGER
+                            send INTEGER DEFAULT 0
                             )''')
     base.commit()
 

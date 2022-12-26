@@ -71,6 +71,22 @@ def users_prepare_sql() -> list[dict]:
     return result
 
 
+def prepare_records_for_db(notice_list: list, existing_href: list):
+    records = []
+    for i in notice_list:
+        if not i.get('href') in existing_href:
+            records.append(
+                            (i.get('bidderOrgCode'),
+                            i.get('rightHolderCode'),
+                            i.get('documentType'),
+                            i.get('regNum'),
+                            i.get('publishDate'),
+                            i.get('href'),
+                            )
+                        )
+    return records
+
+
 def is_all_regex_in_str(input_str:str, regex_list:list) -> bool:
     """Проверяет вхождение всех шаблонов regex в строку.
     Если элемент regex_list - список шаблонов - вернется True если все шаблоны входят в строку

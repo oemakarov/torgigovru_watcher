@@ -14,10 +14,7 @@ from lib.torgigovru2 import Notification, TorgiGovRu
 from lib.telegram import Telegram
 from lib.tools import (
     users_prepare_sql,
-    # users_prepare_sql,
-    # search_pattern_prepare,
-    # search_pattern_prepare_one,
-    # is_any_regex_in_str,
+    prepare_records_for_db,
     is_all_regex_in_str,
     attachment_id_name,
     del_file_attachment_id_name,
@@ -26,23 +23,18 @@ from lib.tools import (
     money_format,
     elem,
     large_img_resize,
-    # save_dict_to_json_file,
     getget,
     getget_str,
     fields_to_dict_from_list,
 )
-
-
-
-
-# ------
+from __version__ import __version__
 
 
 def my_exception_hook(exctype, value, traceback):
     print(exctype, value, traceback)
     if exctype != SystemExit:
         error_text = '\nКритическая ошибка.\n\nERROR : ' + str(value) + '\n' + str(traceback.tb_frame) + '\nline no : ' + str(traceback.tb_lineno)
-        error_text_caption = f'torgi gov ru watcher\n`{error_text}`'
+        error_text_caption = f'{config.log_name} v{__version__}\n`{error_text}`'
         telegram = Telegram()
         telegram.send_message(error_text_caption)
     sys.exit(1)
@@ -73,14 +65,12 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
         if lot_name == procedure_name:
             procedure_name = ''
 
-        # breakpoint()
         lot_address_subject_code = getget(lot, 'biddingObjectInfo', 'subjectRF', 'code')
         lot_address_subject_name = getget(lot, 'biddingObjectInfo', 'subjectRF', 'name')
         lot_estate_address = getget(lot, 'biddingObjectInfo', 'estateAddress')
         lot_price_min = lot.get("priceMin")
         lot_price_step = lot.get("priceStep")
         lot_deposit = lot.get("deposit")
-
 
         print(f'{lot_address_subject_code =}') 
         print(f'{lot_address_subject_name =}') 
@@ -127,7 +117,7 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
                         (
                             # f'{lot_title}'
                             f'_{procedure_name}_\n' 
-                            f'*{elem(lot_name)}*' 
+                            # f'*{elem(lot_name)}*' 
                             f'{elem(lot_price_elem)}' 
                             f'{elem(lot_estate_address, emoji="compass")}'
 
@@ -137,12 +127,14 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
                             f'`{elem(lot_description, emoji="flag_small", end=config.EOL+config.EOL)}`'
                             f'{lot_characteristics}'
                         )
-                , config.TELEGRAM_MESSAGE_LIMIT)
+                , config.TELEGRAM_MESSAGE_CAPTION_LIMIT)
                 )
         lot_info += f'{config.EOL} {elem(lot_url, pre=" ", emoji="globe_with_meridians")}'
 
         print(f'{lot_info = }')
-        img_ids = list(filter(lambda i: i.get('size') < config.IMG_SIZE_LIMIT, lot.get('imageIds', [])))[:9]
+
+        img_ids = [i for i in lot.get('imageIds', []) if i.get('size') < config.IMG_SIZE_LIMIT][:9] 
+        # img_ids = list(filter(lambda i: i.get('size') < config.IMG_SIZE_LIMIT, lot.get('imageIds', [])))[:9]
 
         if len(img_ids) > 1: # если есть изображения лота
             media_group = []
@@ -154,16 +146,15 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
                     with open(attachment_id_name(attachment), 'rb') as attachment_file:
                         data = attachment_file.read() 
                         if not media_group:
-                            media_group.append(InputMediaPhoto(data, caption=close_tags(cut_len(lot_info, config.TELEGRAM_MESSAGE_CAPTION_LIMIT)), parse_mode='MARKDOWN'))
+                            media_group.append(InputMediaPhoto(data, caption=lot_info, parse_mode='MARKDOWN'))
+                            # media_group.append(InputMediaPhoto(data, caption=close_tags(cut_len(lot_info, config.TELEGRAM_MESSAGE_CAPTION_LIMIT)), parse_mode='MARKDOWN'))
                         else:
                             media_group.append(InputMediaPhoto(data))
                 else:
                     log.error(f'cant download attachment {href} {attachment_id_name(attachment)}')
             bot.send_media_group(chat_id, media_group)
-            # sleep(1)
 
         elif len(img_ids) == 1: # оджно изображение
-            # log.info('--- mode --- one media') 
             ok, filename = notification_obj.attachment_content_save(content_id=img_ids[0]['id'], filename=attachment_id_name(img_ids[0]))
             if ok:  # если скачиваени прошло хорошо
                 large_img_resize(attachment_id_name(img_ids[0]), config.IMG_MAX_SIZE_XY)
@@ -186,21 +177,6 @@ def process_error(href: str):
         log.error(f'cant get ni by url {href}\n{try_num =}')
 
 
-def prepare_records_for_db(notice_list: list, existing_href: list):
-    pass
-    records = []
-    for i in notice_list:
-        if not i.get('href') in existing_href:
-            records.append(
-                            (i.get('bidderOrgCode'),
-                            i.get('rightHolderCode'),
-                            i.get('documentType'),
-                            i.get('regNum'),
-                            i.get('publishDate'),
-                            i.get('href'),
-                            )
-                        )
-    return records
 
 
 def get_few_days_notice_list(deepnes:int) -> list[dict]:
@@ -260,7 +236,7 @@ def main():
 
 if __name__ == '__main__':
     sys.excepthook = my_exception_hook
-    log = app_logger.get_logger('tw2')
+    log = app_logger.get_logger(config.log_name)
     # log.info('')
     torgi = TorgiGovRu()
     n = Notification()
