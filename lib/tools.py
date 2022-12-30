@@ -32,6 +32,16 @@ def wrap_word(pattern:str) -> str:
     return f'([^а-я]|^){pattern}([^а-я]|$)' # выделение чистого слова, не в составе другого слова
 
 
+def replace_kadnum_to_maplink(source: str) -> str:
+    KADNUM_PATTERN = '\d{2}:\d{2}:\d{6,7}:\d*'
+    TELERGAM_MAPLINK_TEMPLATE = '[{}](https://egrp365.org/map/?kadnum={})'
+
+    for kadnum in re.findall(KADNUM_PATTERN, source):
+        source = source.replace(kadnum, TELERGAM_MAPLINK_TEMPLATE.format(kadnum, kadnum))
+    return source
+
+
+
 def search_pattern_prepare_one(search_item:str) -> list:
     if '+' in search_item:
         result = []
@@ -286,7 +296,6 @@ def getget_str(input_dict:dict, *keys):
     """
     value = getget(input_dict, *keys)
     return str(value) if value else None
-
 
 
 def fields_to_dict_from_list(list_of_fields : list) -> dict:

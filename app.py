@@ -13,6 +13,7 @@ import lib.db_sqlite as sql
 from lib.torgigovru2 import Notification, TorgiGovRu
 from lib.telegram import Telegram
 from lib.tools import (
+    replace_kadnum_to_maplink,
     users_prepare_sql,
     prepare_records_for_db,
     is_all_regex_in_str,
@@ -38,6 +39,10 @@ def my_exception_hook(exctype, value, traceback):
         telegram = Telegram()
         telegram.send_message(error_text_caption)
     sys.exit(1)
+
+
+
+
 
 
 def process_notification(notification_obj:Notification, notice_info:dict, bot:TeleBot, chat_id:int):
@@ -92,19 +97,9 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
         ['DA_depositRecipient', 'DA_isDepositSpecified', 'DA_inquiryRules', 'DA_limitations', 'DA_intendedUse', 'DA_paymentOrder', 'DA_monthlyPrice']
 
         lot_contract_type = getget(lot_additional_details, 'DA_contractType', 'value', 'name')
-        lot_contract_years = getget(lot_additional_details, 'DA_contractYears', 'value')
-        lot_contract_months = getget(lot_additional_details, 'DA_contractMonths', 'value')
+        lot_contract_years = getget(lot_additional_details, 'DA_contractYears', 'value') or getget(lot_additional_details, 'DA_contractYears_BA(67)', 'value')
+        lot_contract_months = getget(lot_additional_details, 'DA_contractMonths', 'value') or getget(lot_additional_details, 'DA_contractMonths_BA(67)', 'value')
         lot_contract_period = getget(lot_additional_details, 'DA_contractDate_EA(ZK)', 'value') or getget(lot_additional_details, 'DA_contractDate_PA(ZK)', 'value')
-
-        # print('DA_contractDate_EA(ZK) = ', getget(lot_additional_details, 'DA_contractDate_EA(ZK)', 'value'))
-        # print('DA_contractDate_PA(ZK) = ', getget(lot_additional_details, 'DA_contractDate_PA(ZK)', 'value'))
-        
-        # print(f'{lot_contract_period = }')
-        # print(f'{lot_contract_years = }')
-        # print(f'{lot_contract_months = }')
-
-        if not (lot_contract_years or lot_contract_months or lot_contract_period):
-            log.error(f'no period - {href =}')
 
         lot_yearly_price = getget_str(lot_additional_details, 'DA_yearlyPrice', 'value')
         lot_monthly_price = getget_str(lot_additional_details, 'DA_monthlyPrice', 'value')
@@ -124,15 +119,13 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
         # lot_url = f'[{notice_number}]({href})'
         lot_url = f'[{notice_number}_lot{lot_number}](https://torgi.gov.ru/new/public/lots/lot/{notice_number}_{lot_number})'
 
+        lot_name = replace_kadnum_to_maplink(lot_name)
         lot_info = close_tags(
             cut_len(
                         (
-                            # f'{lot_title}'
-                            f'{elem(lot_url, end=config.EOL)}'
-                            # f'{elem(lot_url, pre=" ", emoji="globe_with_meridians", end=config.EOL)}'
+                            f'{elem(lot_url)}'
                             f'{elem(procedure_name, pre="_", end=f"_{config.EOL*2}")}'
-                            # f'_{procedure_name}_\n' 
-                            f'*{elem(lot_name, end=config.EOL*2)}*' 
+                            f'{elem(lot_name, end=config.EOL*2)}' 
                             f'{elem(lot_price_elem)}' 
                             f'{elem(lot_estate_address, emoji="compass")}'
 
@@ -149,7 +142,6 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
         print(f'{lot_info = }')
 
         img_ids = [i for i in lot.get('imageIds', []) if i.get('size') < config.IMG_SIZE_LIMIT][:9] 
-        # img_ids = list(filter(lambda i: i.get('size') < config.IMG_SIZE_LIMIT, lot.get('imageIds', [])))[:9]
 
         if len(img_ids) > 1: # если несколько изображений лота
             media_group = []
@@ -178,7 +170,7 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
             else:                    
                 log.error(f'cant download attachment {href} {attachment_id_name(attachment)}')
         else:
-            bot.send_message(chat_id, lot_info)
+            bot.send_message(chat_id, lot_info, disable_web_page_preview=True)
 
         # bot.send_message(chat_id, f'{Telegram.emoji["arrow_up"]} [{notice_number}]({href})', parse_mode='MarkdownV2')
         # удалить файлы аттача 
