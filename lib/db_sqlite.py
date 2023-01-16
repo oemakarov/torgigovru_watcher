@@ -49,7 +49,6 @@ def get_user_send_times(id: str) -> int:
 
 def set_user_search_sended(id: str):
     send_times = get_user_send_times(id)
-    # print(f'***************{send_times =}')
     send_times_new = send_times +1
     cur_users.execute('UPDATE users SET send_datetime = ?, send_times = ? WHERE id = ?', 
                             (str(datetime.now()), send_times_new, id))
@@ -77,10 +76,13 @@ def get_notice_by_href(href: str) -> list:
     rows = cur.execute('SELECT * FROM notice WHERE href = ?', (href, )).fetchall()
     return rows
 
+def get_send_by_href(href: str) -> int:
+    rows = cur.execute('SELECT send FROM notice WHERE href = ?', (href, )).fetchone()
+    return int(rows[0])
+
 def get_done_by_href(href: str) -> list:
     print(f'{href = }')
     rows = cur.execute('SELECT done FROM notice WHERE href = ?', (href, )).fetchall()
-    # вернуть true или false
     return bool(rows[0][0])
 
 
@@ -92,9 +94,14 @@ def set_done_by_href(href: str, date_time: datetime):
     cur.execute('UPDATE notice SET done = ?, done_date = ? WHERE href = ?', (1, str(date_time), href))
     base.commit()
 
+# --------------
+def set_add1_send_by_href(href: str):
+    num = get_send_by_href(href)
+    set_send_by_href(href, num+1)
 
-def set_send_by_href(href: str):
-    cur.execute('UPDATE notice SET send = 1 WHERE href = ?', (href, ))
+# --------------
+def set_send_by_href(href: str, num: int):
+    cur.execute('UPDATE notice SET send = ? WHERE href = ?', (num, href, ))
     base.commit()
 
 

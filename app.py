@@ -177,6 +177,18 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
         del_file_attachment_id_name(img_ids)
 
 
+def process_all_users_searches(href: str, users_search_data: dict, ni: dict):
+    for user_id, user_all_searches in users_search_data.items():
+        for one_search in user_all_searches:
+            s_id, s_content = one_search
+            if config.DEBUG_PASS_ALL_NOTICE or is_all_regex_in_str(input_str=str(ni), regex_list=s_content): # в извещении есть искомое
+                log.info(f'MATCH {user_id = } {s_content = }')
+                process_notification(notification_obj=n, notice_info=ni, bot=bot, chat_id=user_id)
+                sql.set_add1_send_by_href(href)
+                sql.set_user_search_sended(s_id)
+                sleep(config.TELEGRAM_MESSAGE_DELAY)
+
+
 def process_error(href: str):
     """обработка ошибки получения данных поста
     вносим +1 в базу по данному url, выводим сообщение в логи
@@ -186,7 +198,7 @@ def process_error(href: str):
     """
     try_num = sql.get_try_num_by_href(href)
     sql.set_try_num_by_href(href, str(try_num + 1))
-    if try_num > 2:
+    if try_num > config.HREF_TRY_LIMIT_ADMIN_ALERT:
         log.error(f'cant get ni by url {href}\n{try_num =}')
 
 
@@ -245,23 +257,19 @@ def main():
         except:
             process_error(href)
             continue
-            
-        if not ni:
-            process_error(href)
-        else:
-            for user_id, user_all_searches in users_search_data.items():
-                for one_search in user_all_searches:
-                    s_id, s_content = one_search
-                    if config.DEBUG_PASS_ALL_NOTICE or is_all_regex_in_str(input_str=str(ni), regex_list=s_content): # в извещении есть искомое
-                        log.info(f'MATCH {user_id = } {s_content = }')
-                        process_notification(notification_obj=n, notice_info=ni, bot=bot, chat_id=user_id)
-                        sql.set_send_by_href(href)
-                        sql.set_user_search_sended(s_id)
-                        sleep(config.TELEGRAM_MESSAGE_DELAY)
 
+        try:
+            process_all_users_searches(href, users_search_data, ni)
+        except Exception as e:
+            process_error(href)
+            log.warning(f'{href = }\n{e}')
+            raise e
+        else:
             sql.set_done_now_by_href(href)
-            sleep(config.PROCESS_NOTICE_DELAY)
-    log.info('EXIT')
+
+        sleep(config.PROCESS_NOTICE_DELAY)
+
+    log.info('.............. EXIT')
     
 
 if __name__ == '__main__':

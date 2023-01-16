@@ -15,6 +15,7 @@ datefmt='%Y-%m-%d %H:%M:%S'
 admin_user_id = '55562319'
 
 DAYS_DEEP_NOTICE_WATCH= 8
+HREF_TRY_LIMIT_ADMIN_ALERT = 4
 
 BOT_TOKEN = secret.BOT_TOKEN
 TELEGRAM_MESSAGE_LIMIT = 4000 # длина сообщения в телеграм
