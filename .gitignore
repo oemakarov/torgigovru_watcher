@@ -2,8 +2,9 @@
 secret.py
 *.db
 test.py
-data/
+run.log
 
+# -------------------------------------
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

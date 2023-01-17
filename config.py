@@ -2,7 +2,7 @@ from pathlib import Path
 import secret
 
 sqlite_db_filename = Path('data', 'data.db')
-sqlite_db_users_filename = Path('user_data', 'user_data.db')
+sqlite_db_users_filename = Path('data_user', 'user_data.db')
 
 log_name = 'torgigovru_watcher'
 log_filename = Path('log', 'run.log')
