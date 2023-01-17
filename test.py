@@ -1,4 +1,4 @@
-import re
+import re 
 
 KADNUM_PATTERN = '\d{2}:\d{2}:\d{6,7}:\d*'
 MAP_LINK = 'https://egrp365.org/map/?kadnum={}'

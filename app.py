@@ -189,7 +189,7 @@ def process_all_users_searches(href: str, users_search_data: dict, ni: dict):
                 sleep(config.TELEGRAM_MESSAGE_DELAY)
 
 
-def process_error(href: str):
+def process_error(href: str, msg: str = ''):
     """обработка ошибки получения данных поста
     вносим +1 в базу по данному url, выводим сообщение в логи
 
@@ -199,7 +199,7 @@ def process_error(href: str):
     try_num = sql.get_try_num_by_href(href)
     sql.set_try_num_by_href(href, str(try_num + 1))
     if try_num > config.HREF_TRY_LIMIT_ADMIN_ALERT:
-        log.error(f'cant get ni by url {href}\n{try_num =}')
+        log.error(f'{msg} {href}\n{try_num =}')
 
 
 def get_few_days_notice_list(deepnes:int) -> list[dict]:
@@ -255,13 +255,13 @@ def main():
         try:
             ni = n.info(href)
         except:
-            process_error(href)
+            process_error(href, 'n.info(href)')
             continue
 
         try:
             process_all_users_searches(href, users_search_data, ni)
         except Exception as e:
-            process_error(href)
+            process_error(href, 'process_all_users_searches')
             log.warning(f'{href = }\n{e}')
             raise e
         else:
