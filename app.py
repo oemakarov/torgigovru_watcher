@@ -199,7 +199,8 @@ def process_error(href: str, msg: str = ''):
     try_num = sql.get_try_num_by_href(href)
     sql.set_try_num_by_href(href, str(try_num + 1))
     if try_num > config.HREF_TRY_LIMIT_ADMIN_ALERT:
-        log.error(f'{msg} {href}\n{try_num =}')
+        # log.error(f'{msg} {href}\n{try_num =}')
+        sql.set_done_error_now_by_href(href)
 
 
 def get_few_days_notice_list(deepnes:int) -> list[dict]:
@@ -244,7 +245,7 @@ def main():
     log.info(f'notice to append = {len(records)}')
     sql.add_notice_many(records)
 
-    notice_todo = sql.get_notice_href_by_done(done=0)
+    notice_todo = sql.get_notice_href_by_done(value=0)
     log.info(f'notice_todo = {len(notice_todo)}')
 
     users_search_data = users_prepare_sql()
@@ -265,7 +266,7 @@ def main():
             log.warning(f'{href = }\n{e}')
             raise e
         else:
-            sql.set_done_now_by_href(href)
+            sql.set_done_ok_now_by_href(href)
 
         sleep(config.PROCESS_NOTICE_DELAY)
 

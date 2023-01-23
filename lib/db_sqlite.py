@@ -64,8 +64,8 @@ def get_notice_by_done(done: int) -> list:
     rows = cur.execute('SELECT * FROM notice WHERE done = ?', (done, )).fetchall()
     return rows
 
-def get_notice_href_by_done(done: int) -> list:
-    rows = cur.execute('SELECT href FROM notice WHERE done = ?', (done, )).fetchall()
+def get_notice_href_by_done(value: int) -> list:
+    rows = cur.execute('SELECT href FROM notice WHERE done = ?', (value, )).fetchall()
     return [r[0] for r in rows]
 
 def is_got_notice_by_href(href: str) -> bool:
@@ -81,17 +81,20 @@ def get_send_by_href(href: str) -> int:
     return int(rows[0])
 
 def get_done_by_href(href: str) -> list:
-    print(f'{href = }')
     rows = cur.execute('SELECT done FROM notice WHERE href = ?', (href, )).fetchall()
     return bool(rows[0][0])
 
 
-def set_done_now_by_href(href: str):
-    set_done_by_href(href, datetime.now())
+def set_done_ok_now_by_href(href: str):
+    set_done_by_href(href, 1, datetime.now())
 
 
-def set_done_by_href(href: str, date_time: datetime):
-    cur.execute('UPDATE notice SET done = ?, done_date = ? WHERE href = ?', (1, str(date_time), href))
+def set_done_error_now_by_href(href: str):
+    set_done_by_href(href, 2, datetime.now())
+
+
+def set_done_by_href(href: str, value: int, date_time: datetime):
+    cur.execute('UPDATE notice SET done = ?, done_date = ? WHERE href = ?', (int(value), str(date_time), href))
     base.commit()
 
 # --------------
