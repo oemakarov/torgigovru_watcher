@@ -73,11 +73,12 @@ def users_prepare_sql() -> list[dict]:
         searches = sql.get_user_search(user_id=u)
         s_data = []
         for s in searches:
-            s_id, s_content = s
+            s_id, s_content, s_send_link = s
             s_pattern = search_pattern_prepare_one(s_content)
-            s_data.append([s_id, s_pattern])
+            s_data.append([s_id, s_pattern, s_send_link])
 
         result.update({u : s_data}) 
+
     return result
 
 
@@ -314,3 +315,17 @@ def fields_to_dict_from_list(list_of_fields : list) -> dict:
 
         _result.update({field['code'] : {'name' : field['name'], 'value' : field['value']}})
     return _result
+
+
+
+
+def compose_lot_link(notice_number: str, lot_number: str) -> str:
+    """
+    Формирование ссылки на лот
+    """
+    return f'[{notice_number}_lot{lot_number}](https://torgi.gov.ru/new/public/lots/lot/{notice_number}_{lot_number})'
+
+
+
+
+

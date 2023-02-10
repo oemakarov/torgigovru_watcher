@@ -27,6 +27,7 @@ from lib.tools import (
     getget,
     getget_str,
     fields_to_dict_from_list,
+    compose_lot_link,
 )
 from __version__ import __version__
 
@@ -41,11 +42,7 @@ def my_exception_hook(exctype, value, traceback):
     sys.exit(1)
 
 
-
-
-
-
-def process_notification(notification_obj:Notification, notice_info:dict, bot:TeleBot, chat_id:int):
+def process_notification(notification_obj: Notification, notice_info: dict, bot: TeleBot, chat_id: str, send_link: int):
 
     # save_dict_to_json_file('notification.json', notice_info)
     notice = notice_info['exportObject']['structuredObject']['notice']
@@ -58,9 +55,13 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
     href = notice['commonInfo']['href']
     
     for lot in notice.get('lots'):
+        lot_number = lot.get("lotNumber")
+
+        if sql.is_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id):
+            continue
+
         sleep(config.PROCESS_LOT_DELAY)
 
-        lot_number = lot.get("lotNumber")
         log.info(f'лот - {lot_number}') 
         lot_name = lot.get("lotName")
         lot_description = lot.get("lotDescription")
@@ -116,9 +117,8 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
         #         print(f'    {v.get("name")} = {v.get("value")}') 
 
         lot_price_elem = lot_monthly_price_elem or lot_yearly_price_elem or lot_price_min_elem
-        # lot_url = f'[{notice_number}]({href})'
-        lot_url = f'[{notice_number}_lot{lot_number}](https://torgi.gov.ru/new/public/lots/lot/{notice_number}_{lot_number})'
 
+        lot_url = compose_lot_link(notice_number, lot_number) if send_link else ''
         lot_name = replace_kadnum_to_maplink(lot_name)
         lot_info = close_tags(
             cut_len(
@@ -143,7 +143,7 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
 
         img_ids = [i for i in lot.get('imageIds', []) if i.get('size') < config.IMG_SIZE_LIMIT][:9] 
 
-        if len(img_ids) > 1: # если несколько изображений лота
+        if len(img_ids) > 1: # несколько изображений лота
             media_group = []
             for attachment in img_ids:
                 ok, filename = notification_obj.attachment_content_save(content_id=attachment['id'], 
@@ -160,17 +160,20 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
                 else:
                     log.error(f'cant download attachment {href} {attachment_id_name(attachment)}')
             bot.send_media_group(chat_id, media_group)
+            sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
 
-        elif len(img_ids) == 1: # оджно изображение
+        elif len(img_ids) == 1: # одно изображение
             ok, filename = notification_obj.attachment_content_save(content_id=img_ids[0]['id'], filename=attachment_id_name(img_ids[0]))
             if ok:  # если скачиваени прошло хорошо
                 large_img_resize(attachment_id_name(img_ids[0]), config.IMG_MAX_SIZE_XY)
                 with open(attachment_id_name(img_ids[0]), 'rb') as f:
                     bot.send_photo(chat_id, f, caption=close_tags(cut_len(lot_info, config.TELEGRAM_MESSAGE_CAPTION_LIMIT)))
+                    sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
             else:                    
                 log.error(f'cant download attachment {href} {attachment_id_name(attachment)}')
-        else:
+        else: # нет изображений
             bot.send_message(chat_id, lot_info, disable_web_page_preview=True)
+            sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
 
         # bot.send_message(chat_id, f'{Telegram.emoji["arrow_up"]} [{notice_number}]({href})', parse_mode='MarkdownV2')
         # удалить файлы аттача 
@@ -180,10 +183,11 @@ def process_notification(notification_obj:Notification, notice_info:dict, bot:Te
 def process_all_users_searches(href: str, users_search_data: dict, ni: dict):
     for user_id, user_all_searches in users_search_data.items():
         for one_search in user_all_searches:
-            s_id, s_content = one_search
-            if config.DEBUG_PASS_ALL_NOTICE or is_all_regex_in_str(input_str=str(ni), regex_list=s_content): # в извещении есть искомое
+            s_id, s_content, s_send_link = one_search
+            if config.DEBUG_PASS_ALL_NOTICE or \
+                    is_all_regex_in_str(input_str=str(ni), regex_list=s_content): # в извещении есть искомое
                 log.info(f'MATCH {user_id = } {s_content = }')
-                process_notification(notification_obj=n, notice_info=ni, bot=bot, chat_id=user_id)
+                process_notification(notification_obj=n, notice_info=ni, bot=bot, chat_id=str(user_id), send_link=s_send_link)
                 sql.set_add1_send_by_href(href)
                 sql.set_user_search_sended(s_id)
                 sleep(config.TELEGRAM_MESSAGE_DELAY)

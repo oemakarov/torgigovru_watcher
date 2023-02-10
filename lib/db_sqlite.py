@@ -6,10 +6,6 @@ def sql_start(sqlite_db_filename: str):
     global base, cur
     base = sq.connect(sqlite_db_filename)
     cur = base.cursor()
-
-
-    # if base:
-    #     print('data base - connected - OK')
         
     cur.execute('''CREATE TABLE IF NOT EXISTS 
                         notice(
@@ -27,7 +23,18 @@ def sql_start(sqlite_db_filename: str):
                             )''')
     base.commit()
 
-# ----------------------------------------
+    cur.execute('''CREATE TABLE IF NOT EXISTS 
+                        sended(
+                            id INTEGER PRIMARY KEY, 
+                            reg_num TEXT, 
+                            lot_num TEXT, 
+                            user_id TEXT, 
+                            done_date TEXT
+                            )''')
+    base.commit()
+
+
+# --------------BASE USERS--------------------------
 def sql_start_users(sqlite_db_filename: str):
     global base_users, cur_users
     base_users = sq.connect(sqlite_db_filename)
@@ -40,12 +47,20 @@ def get_users() -> list:
 
 
 def get_user_search(user_id: str) -> list:
-    rows = cur_users.execute('SELECT id, search FROM users WHERE user_id = ?', (user_id, )).fetchall()
+    # rows = cur_users.execute('SELECT id, search FROM users WHERE user_id = ?', (user_id, )).fetchall()
+    rows = cur_users.execute('SELECT id, search, send_link FROM users WHERE user_id = ?', (user_id, )).fetchall()
     return rows
+
+
+def is_user_send_url(user_id: str, search_id: int) -> bool:
+    rows = cur_users.execute('SELECT send_url FROM users WHERE user_id = ? AND id = ?', (user_id, search_id)).fetchone()
+    return rows[0]
+
 
 def get_user_send_times(id: str) -> int:
     rows = cur_users.execute('SELECT send_times FROM users WHERE id = ?', (id, )).fetchone()
     return rows[0]
+
 
 def set_user_search_sended(id: str):
     send_times = get_user_send_times(id)
@@ -55,7 +70,30 @@ def set_user_search_sended(id: str):
     base_users.commit()
 
 
-# ----------------------------------------
+# ------------------BASE NOTICE / SENDED----------------------
+
+# ------------------TABLE SENDED----------------------
+
+def is_lot_sended(reg_num: str, lot_num: str, user_id: str) -> bool:
+    rows = cur.execute('SELECT * FROM sended WHERE reg_num = ? AND lot_num = ? AND user_id = ?', 
+                        (reg_num, lot_num, user_id)).fetchall()
+    return True if rows else False
+
+
+def add_lot_sended(reg_num: str, lot_num: str, user_id: str):
+    cur.execute('''INSERT INTO sended(reg_num,
+                                    lot_num, 
+                                    user_id, 
+                                    done_date) 
+                                    VALUES (?, ?, ?, ?)''', 
+                                    (reg_num, 
+                                    lot_num, 
+                                    user_id, 
+                                    str(datetime.now())))
+    base.commit()
+
+# ------------------TABLE NOTICE----------------------
+
 def get_all_notice_href() -> list:
     rows = cur.execute('SELECT href FROM notice').fetchall()
     return [r[0] for r in rows]

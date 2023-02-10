@@ -29,8 +29,8 @@ PROCESS_NOTICE_DELAY = 1 # задержка перед обработкой сл
 PROCESS_LOT_DELAY = 1 # задержка перед обработкой следующего лота
 EOL = '\n'
 
-DEBUG_PASS_ALL_NOTICE = True  # тестовый режим обработки всех извещений
 DEBUG_PASS_ALL_NOTICE = False # рабочий режим
+DEBUG_PASS_ALL_NOTICE = True  # тестовый режим обработки всех извещений
 
 # 'москва+авто'
 # '*частьслова*+обособленноеслово+@92'
