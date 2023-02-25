@@ -4,6 +4,8 @@ from time import sleep
 import sys
 from telebot import TeleBot
 from telebot.types import InputMediaPhoto
+from telebot.formatting import escape_markdown as esc
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -19,10 +21,11 @@ from lib.tools import (
     is_all_regex_in_str,
     attachment_id_name,
     del_file_attachment_id_name,
-    close_tags,
+    close_tags_markdown_esc,
     cut_len,
     money_format,
     elem,
+    pre_end,
     large_img_resize,
     getget,
     getget_str,
@@ -117,29 +120,25 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
         #         print(f'    {v.get("name")} = {v.get("value")}') 
 
         lot_price_elem = lot_monthly_price_elem or lot_yearly_price_elem or lot_price_min_elem
-
         lot_url = compose_lot_link(notice_number, lot_number) if send_link else ''
-        lot_name = replace_kadnum_to_maplink(lot_name)
-        lot_info = close_tags(
-            cut_len(
-                        (
-                            f'{elem(lot_url)}'
-                            f'{elem(procedure_name, pre="_", end=f"_{config.EOL*2}")}'
-                            f'{elem(lot_name, end=config.EOL*2)}' 
-                            f'{elem(lot_price_elem)}' 
-                            f'{elem(lot_estate_address, emoji="compass")}'
-
-                            f'{elem(lot_contract_period, text="Срок аренды", emoji="calendar")}'
-                            f'{elem(lot_contract_years, text="Срок договора (лет)", emoji="calendar")}'
-                            f'{elem(lot_contract_months, text="Срок договора (мес)", emoji="calendar")}'
-                            f'{elem(bidd_end_time, text="Подача до", emoji="alarm_clock")}\n'
-                            f'`{elem(lot_description, emoji="flag_small", end=config.EOL*2)}`'
-                            f'{lot_characteristics}'
-                        )
-                , config.TELEGRAM_MESSAGE_CAPTION_LIMIT)
-                )
+        
+        lot_info = (
+                    f'{esc(elem(lot_url))}'
+                    f'_{esc(elem(procedure_name, end=f"{config.EOL*2}"))}_'
+                    f'{pre_end(replace_kadnum_to_maplink(esc(lot_name)), end=config.EOL*2)}' 
+                    f'{esc(elem(lot_price_elem))}' 
+                    f'{esc(elem(lot_estate_address, emoji="compass"))}'
+                    f'{esc(elem(lot_contract_period, text="Срок аренды", emoji="calendar"))}'
+                    f'{esc(elem(lot_contract_years, text="Срок договора (лет)", emoji="calendar"))}'
+                    f'{esc(elem(lot_contract_months, text="Срок договора (мес)", emoji="calendar"))}'
+                    f'{esc(elem(bidd_end_time, text="Подача до", emoji="alarm_clock"))}\n'
+                    f'`{esc(elem(lot_description, emoji="flag_small", end=config.EOL+config.EOL))}`'
+                    f'{esc(lot_characteristics)}'
+                    )
 
         print(f'{lot_info = }')
+        lot_info_ready = close_tags_markdown_esc(cut_len(lot_info, config.TELEGRAM_MESSAGE_CAPTION_LIMIT))
+        print(f'{lot_info_ready = }')
 
         img_ids = [i for i in lot.get('imageIds', []) if i.get('size') < config.IMG_SIZE_LIMIT][:9] 
 
@@ -153,8 +152,10 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
                     with open(attachment_id_name(attachment), 'rb') as attachment_file:
                         data = attachment_file.read() 
                         if not media_group:
-                            media_group.append(InputMediaPhoto(data, caption=lot_info, parse_mode='MARKDOWN'))
-                            # media_group.append(InputMediaPhoto(data, caption=close_tags(cut_len(lot_info, config.TELEGRAM_MESSAGE_CAPTION_LIMIT)), parse_mode='MARKDOWN'))
+                            media_group.append(
+                                            InputMediaPhoto(data, 
+                                                caption=lot_info_ready, 
+                                                            parse_mode=config.DEFAULT_PARSE_MODE))
                         else:
                             media_group.append(InputMediaPhoto(data))
                 else:
@@ -167,16 +168,14 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
             if ok:  # если скачиваени прошло хорошо
                 large_img_resize(attachment_id_name(img_ids[0]), config.IMG_MAX_SIZE_XY)
                 with open(attachment_id_name(img_ids[0]), 'rb') as f:
-                    bot.send_photo(chat_id, f, caption=close_tags(cut_len(lot_info, config.TELEGRAM_MESSAGE_CAPTION_LIMIT)))
+                    bot.send_photo(chat_id, f, caption=lot_info_ready)
                     sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
             else:                    
                 log.error(f'cant download attachment {href} {attachment_id_name(attachment)}')
         else: # нет изображений
             bot.send_message(chat_id, lot_info, disable_web_page_preview=True)
             sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
-
         # bot.send_message(chat_id, f'{Telegram.emoji["arrow_up"]} [{notice_number}]({href})', parse_mode='MarkdownV2')
-        # удалить файлы аттача 
         del_file_attachment_id_name(img_ids)
 
 
@@ -282,7 +281,7 @@ if __name__ == '__main__':
     log = app_logger.get_logger(config.log_name)
     torgi = TorgiGovRu()
     n = Notification()
-    bot=TeleBot(config.BOT_TOKEN, parse_mode='MARKDOWN')
+    bot=TeleBot(config.BOT_TOKEN, parse_mode=config.DEFAULT_PARSE_MODE)
     main()
 
 

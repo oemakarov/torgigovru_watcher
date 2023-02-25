@@ -5,7 +5,7 @@ from PIL import Image
 import re
 import lib.db_sqlite as sql
 from lib.telegram import Telegram
-
+import config
 
 def wraper(pattern:str) -> str:
     """
@@ -187,6 +187,27 @@ def close_tags(message:str):
     else:
         return message
 
+def close_tags_markdown_esc(message:str):
+    """
+    Закрываем не закрытые тэги для telegram markdown 
+    """
+    tags = ['`', '*', '_']
+    stack = []
+    prev_char = ''
+    ext_message = message
+    for i, char in enumerate(ext_message):
+        if char in tags and prev_char != config.ESCAPE_CHAR:
+            if stack and char == stack[-1]:
+                stack.pop()
+            else:
+                stack.append(char)
+        prev_char = ext_message[i]
+    print(stack)
+    if stack: 
+        return message[:len(message)-len(stack)-3] + ''.join(reversed(stack)) + '\.\.\.'        
+    else:
+        return message
+
 
 def cut_len(message:str, limit:int) -> str:
     """
@@ -197,7 +218,7 @@ def cut_len(message:str, limit:int) -> str:
     if len(message) < limit:
         return message
     else:
-        return message[:limit-3] + '...'
+        return message[:limit-3] + '\.\.\.'
 
 
 def money_format(mny:str, end=' р.') -> str:
@@ -222,6 +243,10 @@ def money_format(mny:str, end=' р.') -> str:
     else:
         return ''
 
+
+
+def pre_end(text: str, pre='', end='\n') -> str:
+    return pre + text + end if text else ''
 
 
 def elem(element:str, text:str='', emoji:str='', pre='', end='\n') -> str:
