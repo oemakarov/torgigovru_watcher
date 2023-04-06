@@ -61,6 +61,7 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
         lot_number = lot.get("lotNumber")
 
         if sql.is_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id):
+            log.info(f'SKIP sending, already sended -- лот - {lot_number}') 
             continue
 
         sleep(config.PROCESS_LOT_DELAY)
@@ -120,11 +121,16 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
         #         print(f'    {v.get("name")} = {v.get("value")}') 
 
         lot_price_elem = lot_monthly_price_elem or lot_yearly_price_elem or lot_price_min_elem
-        lot_url = compose_lot_link(notice_number, lot_number) if send_link else ''
+
+    # -----------------
+        if config.TEST_MODE:
+            send_link = True
         
+    # -----------------
+        lot_url = compose_lot_link(notice_number, lot_number) if send_link else ''
         lot_info = (
-                    f'{esc(elem(lot_url))}'
-                    f'_{esc(elem(procedure_name, end=f"{config.EOL*2}"))}_'
+                    f'{pre_end(lot_url)}'
+                    f'{pre_end(esc(procedure_name), pre="_", end=f"_{config.EOL*2}")}'
                     f'{pre_end(replace_kadnum_to_maplink(esc(lot_name)), end=config.EOL*2)}' 
                     f'{esc(elem(lot_price_elem))}' 
                     f'{esc(elem(lot_estate_address, emoji="compass"))}'
@@ -138,24 +144,24 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
 
         print(f'{lot_info = }')
         lot_info_ready = close_tags_markdown_esc(cut_len(lot_info, config.TELEGRAM_MESSAGE_CAPTION_LIMIT))
-        print(f'{lot_info_ready = }')
-
+        log.info(f'{lot_info_ready = }')
         img_ids = [i for i in lot.get('imageIds', []) if i.get('size') < config.IMG_SIZE_LIMIT][:9] 
 
-        if len(img_ids) > 1: # несколько изображений лота
+        if len(img_ids) > 0: # несколько изображений лота
             media_group = []
             for attachment in img_ids:
+                sleep(config.IMAGE_DOWNLOAD_DELAY)
                 ok, filename = notification_obj.attachment_content_save(content_id=attachment['id'], 
                                                                     filename=attachment_id_name(attachment))
                 if ok:  # если скачиваени прошло хорошо
-                    large_img_resize(attachment_id_name(attachment), config.IMG_MAX_SIZE_XY)
+                    large_img_resize(attachment_id_name(attachment), config.IMG_MAX_SIZE_XY, config.IMG_MAX_SIZE_BYTES)
                     with open(attachment_id_name(attachment), 'rb') as attachment_file:
                         data = attachment_file.read() 
                         if not media_group:
                             media_group.append(
-                                            InputMediaPhoto(data, 
-                                                caption=lot_info_ready, 
-                                                            parse_mode=config.DEFAULT_PARSE_MODE))
+                                        InputMediaPhoto(data, 
+                                                        caption=lot_info_ready, 
+                                                        parse_mode=config.DEFAULT_PARSE_MODE))
                         else:
                             media_group.append(InputMediaPhoto(data))
                 else:
@@ -163,15 +169,15 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
             bot.send_media_group(chat_id, media_group)
             sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
 
-        elif len(img_ids) == 1: # одно изображение
-            ok, filename = notification_obj.attachment_content_save(content_id=img_ids[0]['id'], filename=attachment_id_name(img_ids[0]))
-            if ok:  # если скачиваени прошло хорошо
-                large_img_resize(attachment_id_name(img_ids[0]), config.IMG_MAX_SIZE_XY)
-                with open(attachment_id_name(img_ids[0]), 'rb') as f:
-                    bot.send_photo(chat_id, f, caption=lot_info_ready)
-                    sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
-            else:                    
-                log.error(f'cant download attachment {href} {attachment_id_name(attachment)}')
+        # elif len(img_ids) == 1: # одно изображение
+        #     ok, filename = notification_obj.attachment_content_save(content_id=img_ids[0]['id'], filename=attachment_id_name(img_ids[0]))
+        #     if ok:  # если скачиваени прошло хорошо
+        #         large_img_resize(attachment_id_name(img_ids[0]), config.IMG_MAX_SIZE_XY, config.IMG_MAX_SIZE_BYTES)
+        #         with open(attachment_id_name(img_ids[0]), 'rb') as f:
+        #             bot_ok = bot.send_photo(chat_id, f, caption=lot_info_ready)
+        #             sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
+        #     else:                    
+        #         log.error(f'cant download attachment {href} {attachment_id_name(attachment)}')
         else: # нет изображений
             bot.send_message(chat_id, lot_info, disable_web_page_preview=True)
             sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
@@ -183,8 +189,12 @@ def process_all_users_searches(href: str, users_search_data: dict, ni: dict):
     for user_id, user_all_searches in users_search_data.items():
         for one_search in user_all_searches:
             s_id, s_content, s_send_link = one_search
-            if config.DEBUG_PASS_ALL_NOTICE or \
+            if config.TEST_MODE or \
                     is_all_regex_in_str(input_str=str(ni), regex_list=s_content): # в извещении есть искомое
+
+                if config.TEST_MODE:
+                    user_id = config.admin_user_id
+
                 log.info(f'MATCH {user_id = } {s_content = }')
                 process_notification(notification_obj=n, notice_info=ni, bot=bot, chat_id=str(user_id), send_link=s_send_link)
                 sql.set_add1_send_by_href(href)
@@ -234,12 +244,15 @@ def get_few_days_notice_list(deepnes:int) -> list[dict]:
 
 def main():
     
-    log.info(f'-------------- START - {datetime.now()}')
+    log.info(f'-------------- START {__version__} - {datetime.now()} ')
     sql.sql_start(config.sqlite_db_filename)
     sql.sql_start_users(config.sqlite_db_users_filename)
 
-    few_days_notice_list = get_few_days_notice_list(config.DAYS_DEEP_NOTICE_WATCH)
-    log.info(f'last few_days_notice_list = {len(few_days_notice_list)}, days = {config.DAYS_DEEP_NOTICE_WATCH}')
+    if config.TEST_MODE:
+        few_days_notice_list = []
+    else:
+        few_days_notice_list = get_few_days_notice_list(config.DAYS_DEEP_NOTICE_WATCH)
+        log.info(f'last few_days_notice_list = {len(few_days_notice_list)}, days = {config.DAYS_DEEP_NOTICE_WATCH}')
 
     db_all_records_href_list = sql.get_all_notice_href()
     log.info(f'db all_records_url_list = {len(db_all_records_href_list)}')
@@ -255,6 +268,10 @@ def main():
     log.info(f'{users_search_data = }')
 
     for href in notice_todo:
+
+        if config.TEST_MODE:
+            href = 'https://torgi.gov.ru/new/opendata/7710568760-notice/docs/notice_22000152240000000005_02dc622d-ef31-4f5c-9d38-536a2a022814.json'
+
         log.info(f'{href = }')
         try:
             ni = n.info(href)
@@ -272,7 +289,6 @@ def main():
             sql.set_done_ok_now_by_href(href)
 
         sleep(config.PROCESS_NOTICE_DELAY)
-
     log.info('.............. EXIT')
     
 

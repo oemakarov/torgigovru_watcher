@@ -253,7 +253,6 @@ if __name__ == '__main__':
     #             ok, filename = n.attachment_content_save(content_id=attachment['id'])
     #             if ok: print('OK - filename =', filename) 
     #         print('-'*20) 
-    #     sleep(15)
     #     print('*'*40) 
 
 

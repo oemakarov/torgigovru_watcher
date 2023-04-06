@@ -1,5 +1,7 @@
 import re
 import json
+from telebot.formatting import mlink
+
 from pathlib import Path
 from PIL import Image
 import re
@@ -244,7 +246,6 @@ def money_format(mny:str, end=' р.') -> str:
         return ''
 
 
-
 def pre_end(text: str, pre='', end='\n') -> str:
     return pre + text + end if text else ''
 
@@ -280,18 +281,40 @@ def let(year_count:str) -> str:
     return suffix
 
 
-def large_img_resize(file_name, max_size_xy:int):
+# def large_img_resize(file_name, max_size_xy:int, max_size_bytes:int):
+#     """
+#     Преобразуем картинку из file_name в размер, где сумма высоты и ширины не больше max_size_xy
+#     """
+#     with Image.open(file_name) as im:
+#         width, height = im.size
+#         while (width + height > max_size_xy):
+#             width //= 2
+#             height //= 2
+#         else:
+#             new = im.resize((width, height))
+#             new.save(file_name)
+
+
+
+
+def large_img_resize(file_name, max_size_xy:int, max_size_bytes:int):
     """
     Преобразуем картинку из file_name в размер, где сумма высоты и ширины не больше max_size_xy
     """
-    with Image.open(file_name) as im:
-        width, height = im.size
-        while width + height > max_size_xy:
+
+    foo = Image.open(file_name).size
+    bar = Path(file_name).stat().st_size
+
+    while sum(Image.open(file_name).size) > max_size_xy or \
+                (Path(file_name).stat().st_size > max_size_bytes):
+
+        with Image.open(file_name) as im:
+            width, height = im.size
             width //= 2
             height //= 2
-        else:
             new = im.resize((width, height))
             new.save(file_name)
+
 
 
 def save_dict_to_json_file(filename, dict_input):
@@ -342,15 +365,8 @@ def fields_to_dict_from_list(list_of_fields : list) -> dict:
     return _result
 
 
-
-
 def compose_lot_link(notice_number: str, lot_number: str) -> str:
-    """
-    Формирование ссылки на лот
-    """
-    return f'[{notice_number}_lot{lot_number}](https://torgi.gov.ru/new/public/lots/lot/{notice_number}_{lot_number})'
-
-
-
-
+    return mlink(f'{notice_number}_{lot_number}', 
+                   f'{config.URL_LOT_PREFIX}{notice_number}_{lot_number}', 
+                   escape=True)
 

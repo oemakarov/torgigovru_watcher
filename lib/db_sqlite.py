@@ -47,7 +47,6 @@ def get_users() -> list:
 
 
 def get_user_search(user_id: str) -> list:
-    # rows = cur_users.execute('SELECT id, search FROM users WHERE user_id = ?', (user_id, )).fetchall()
     rows = cur_users.execute('SELECT id, search, send_link FROM users WHERE user_id = ?', (user_id, )).fetchall()
     return rows
 
@@ -181,13 +180,6 @@ def add_notice(bidder_org_code: str,
     base.commit()
 
 def add_notice_many(records: list[tuple]):
-    # bidder_org_code: str, 
-    #                     right_holder_code: str, 
-    #                     document_type: str, 
-    #                     reg_num: str, 
-    #                     publish_date: str, 
-    #                     href: str):
-
     cur.executemany('''INSERT INTO notice(bidder_org_code, 
                                     right_holder_code, 
                                     document_type, 
@@ -195,25 +187,9 @@ def add_notice_many(records: list[tuple]):
                                     publish_date, 
                                     href) 
                                     VALUES (?, ?, ?, ?, ?, ?)''', records)
-                                    # (bidder_org_code, 
-                                    # right_holder_code, 
-                                    # document_type, 
-                                    # reg_num, 
-                                    # publish_date, 
-                                    # href,
     base.commit()
 
 
 def set_try_num_by_href(href: str, try_num: int) -> list:
     cur.execute('UPDATE notice SET try_num = ? WHERE href = ?', (try_num, href, ))
     base.commit()
-
-# ---------------
-
-
-# def del_notice_by_date(limit_datetime: datettime):
-#     cur.execute('''DELETE FROM notice 
-#                         WHERE user_id=? 
-#                         AND 
-#                         search_text=?''', (limit_datetime))
-#     base.commit()
