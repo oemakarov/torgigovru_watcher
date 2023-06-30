@@ -6,7 +6,7 @@ __version__ = 'v0.30'
 
 # v0.30
 # - удаление старых извещений и информации об обработанных извещениях/лотах 
-# - методж del old notice
+# - метод del old notice
 # - константа config.DELETE_TIME_DELTA_DAYS
 # - сжатие базы VACUUM
 
