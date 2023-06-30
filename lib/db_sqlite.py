@@ -1,5 +1,5 @@
 import sqlite3 as sq
-from datetime import datetime
+from datetime import datetime, timedelta
 from logging import Logger
 import config
 
@@ -198,8 +198,8 @@ def set_try_num_by_href(href: str, try_num: int) -> list:
 
 
 def del_old_notice(log: Logger):
-    today = datetime.date.today()
-    new_date = today - datetime.timedelta(days=config.DELETE_TIME_DELTA_DAYS)
+    today = datetime.now()
+    new_date = today - timedelta(days=config.DELETE_TIME_DELTA_DAYS)
     date_delete = new_date.strftime("%Y-%m")
     log.info(f'DELETE notice publish_date LIKE "{date_delete}"')
     log.info(f'DELETE FROM sended WHERE done_date LIKE "{date_delete}"')
