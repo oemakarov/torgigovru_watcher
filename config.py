@@ -38,6 +38,8 @@ IMAGE_DOWNLOAD_DELAY = 0.2 # задержка скачивания изобра�
 EOL = '\n'
 URL_LOT_PREFIX = 'https://torgi.gov.ru/new/public/lots/lot/'
 
+DELETE_TIME_DELTA_DAYS = 50
+
 
 
 # 'москва+авто'

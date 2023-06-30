@@ -289,6 +289,8 @@ def main():
             sql.set_done_ok_now_by_href(href)
 
         sleep(config.PROCESS_NOTICE_DELAY)
+    
+    sql.del_old_notice(log)    
     log.info('.............. EXIT')
     
 
