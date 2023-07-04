@@ -4,15 +4,15 @@ import config_prodtest
 
 TEST_MODE = config_prodtest.TEST_MODE
 
-# sqlite_db_filename = Path('data', 'data.db')
-sqlite_db_filename = Path().cwd().parent / 'data' / 'data.db'
+sqlite_db_filename = Path('data', 'data.db')
+# sqlite_db_filename = Path().cwd().parent / 'data' / 'data.db'
 
-# sqlite_db_users_filename = Path('data_user', 'user_data.db')
-sqlite_db_users_filename = Path().cwd().parent / 'data_user' / 'user_data.db'
+sqlite_db_users_filename = Path('data_user', 'user_data.db')
+# sqlite_db_users_filename = Path().cwd().parent / 'data_user' / 'user_data.db'
 
 log_name = 'torgigovru_watcher'
-# log_filename = Path('log', 'run.log')
-log_filename = Path().cwd().parent / 'log' / 'run.log'
+log_filename = Path('log', 'run.log')
+# log_filename = Path().cwd().parent / 'log' / 'run.log'
 
 log_format = '[%(asctime)s.%(msecs)03d]:%(lineno)d [%(levelname)s] (%(filename)s).%(funcName)s - %(message)s'
 _log_format_debug = '[%(asctime)s.%(msecs)03d]:%(lineno)d [%(levelname)s] (%(filename)s).%(funcName)s - %(message)s'
