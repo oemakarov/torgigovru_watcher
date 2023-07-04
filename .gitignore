@@ -1,5 +1,5 @@
 # lib/
-secret.py
+config_secret.py
 *.db
 test.py
 run.log

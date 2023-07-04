@@ -1,26 +1,31 @@
 from pathlib import Path
-import secret
+import config_secret
 import config_prodtest
 
 TEST_MODE = config_prodtest.TEST_MODE
 
-sqlite_db_filename = Path('data', 'data.db')
-sqlite_db_users_filename = Path('data_user', 'user_data.db')
+# sqlite_db_filename = Path('data', 'data.db')
+sqlite_db_filename = Path().cwd().parent / 'data' / 'data.db'
+
+# sqlite_db_users_filename = Path('data_user', 'user_data.db')
+sqlite_db_users_filename = Path().cwd().parent / 'data_user' / 'user_data.db'
 
 log_name = 'torgigovru_watcher'
-log_filename = Path('log', 'run.log')
+# log_filename = Path('log', 'run.log')
+log_filename = Path().cwd().parent / 'log' / 'run.log'
+
 log_format = '[%(asctime)s.%(msecs)03d]:%(lineno)d [%(levelname)s] (%(filename)s).%(funcName)s - %(message)s'
 _log_format_debug = '[%(asctime)s.%(msecs)03d]:%(lineno)d [%(levelname)s] (%(filename)s).%(funcName)s - %(message)s'
 _log_format_debug_file = '[%(asctime)s.%(msecs)03d] [%(levelname)s] %(message)s'
 _log_format_print = '|%(lineno)d| %(filename)s - %(funcName)s - %(message)s'
 datefmt='%Y-%m-%d %H:%M:%S'
 
-admin_user_id = '55562319'
+ADMIN_USER_ID = config_secret.ADMIN_USER_ID
 
 DAYS_DEEP_NOTICE_WATCH= 8
 HREF_TRY_LIMIT_ADMIN_ALERT = 5
 
-BOT_TOKEN = secret.BOT_TOKEN
+BOT_TOKEN = config_secret.BOT_TOKEN
 TELEGRAM_MESSAGE_LIMIT = 4000 # длина сообщения в телеграм
 TELEGRAM_MESSAGE_CAPTION_LIMIT = 1000 #длина описания для картинки в телеграм
 TELEGRAM_MESSAGE_DELAY = 0.2 #задержка после отправки сообщения в телегу, чтобы не напороться на антифлуд

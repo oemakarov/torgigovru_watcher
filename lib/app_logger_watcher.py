@@ -5,7 +5,7 @@ from logging import Handler, LogRecord
 import config
 
 LOG_FILE_NAME = config.log_filename
-ADMIN_CHAT_ID = config.admin_user_id
+ADMIN_CHAT_ID = config.ADMIN_USER_ID
 BOT_TOKEN = config.BOT_TOKEN
 
 

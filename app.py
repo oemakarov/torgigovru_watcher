@@ -193,7 +193,7 @@ def process_all_users_searches(href: str, users_search_data: dict, ni: dict):
                     is_all_regex_in_str(input_str=str(ni), regex_list=s_content): # в извещении есть искомое
 
                 if config.TEST_MODE:
-                    user_id = config.admin_user_id
+                    user_id = config.ADMIN_USER_ID
 
                 log.info(f'MATCH {user_id = } {s_content = }')
                 process_notification(notification_obj=n, notice_info=ni, bot=bot, chat_id=str(user_id), send_link=s_send_link)
