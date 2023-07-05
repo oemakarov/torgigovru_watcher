@@ -5,6 +5,7 @@ import sys
 from telebot import TeleBot
 from telebot.types import InputMediaPhoto
 from telebot.formatting import escape_markdown as esc
+from telebot.apihelper import ApiTelegramException
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -166,18 +167,16 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
                             media_group.append(InputMediaPhoto(data))
                 else:
                     log.error(f'cant download attachment {href} {attachment_id_name(attachment)}')
-            bot.send_media_group(chat_id, media_group)
+            
+            try:
+                res = bot.send_media_group(chat_id, media_group)
+            except ApiTelegramException as e:
+                log.error(f'{chat_id = }\nerror - {e.description}')
+                exit(123)
+
+            log.info(f'{res = }')
             sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
 
-        # elif len(img_ids) == 1: # одно изображение
-        #     ok, filename = notification_obj.attachment_content_save(content_id=img_ids[0]['id'], filename=attachment_id_name(img_ids[0]))
-        #     if ok:  # если скачиваени прошло хорошо
-        #         large_img_resize(attachment_id_name(img_ids[0]), config.IMG_MAX_SIZE_XY, config.IMG_MAX_SIZE_BYTES)
-        #         with open(attachment_id_name(img_ids[0]), 'rb') as f:
-        #             bot_ok = bot.send_photo(chat_id, f, caption=lot_info_ready)
-        #             sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
-        #     else:                    
-        #         log.error(f'cant download attachment {href} {attachment_id_name(attachment)}')
         else: # нет изображений
             bot.send_message(chat_id, lot_info, disable_web_page_preview=True)
             sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
