@@ -196,6 +196,11 @@ def set_try_num_by_href(href: str, try_num: int) -> list:
     cur.execute('UPDATE notice SET try_num = ? WHERE href = ?', (try_num, href, ))
     base.commit()
 
+def del_all_user_searches(user_id: str, log: Logger):
+    log.info(f'DELETE all user searches "{user_id = }"')
+    cur_users.execute(f'DELETE FROM users WHERE user_id LIKE "{user_id}"')
+    base_users.commit()
+
 
 def del_old_notice(log: Logger):
     today = datetime.now()

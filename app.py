@@ -10,11 +10,11 @@ from telebot.apihelper import ApiTelegramException
 import warnings
 warnings.filterwarnings('ignore')
 
+from init import log, torgi, n, bot
 import config
-import lib.app_logger_watcher as app_logger
+from __version__ import __version__
 import lib.db_sqlite as sql
-from lib.torgigovru2 import Notification, TorgiGovRu
-from lib.telegram import Telegram
+from lib.torgigovru2 import Notification
 from lib.tools import (
     replace_kadnum_to_maplink,
     users_prepare_sql,
@@ -33,17 +33,7 @@ from lib.tools import (
     fields_to_dict_from_list,
     compose_lot_link,
 )
-from __version__ import __version__
-
-
-def my_exception_hook(exctype, value, traceback):
-    print(exctype, value, traceback)
-    if exctype != SystemExit:
-        error_text = '\nКритическая ошибка.\n\nERROR : ' + str(value) + '\n' + str(traceback.tb_frame) + '\nline no : ' + str(traceback.tb_lineno)
-        error_text_caption = f'{config.log_name} v{__version__}\n`{error_text}`'
-        telegram = Telegram()
-        telegram.send_message(error_text_caption)
-    sys.exit(1)
+from services.exeption_handler import my_exception_hook, telebot_exception_handler
 
 
 def process_notification(notification_obj: Notification, notice_info: dict, bot: TeleBot, chat_id: str, send_link: int):
@@ -154,7 +144,7 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
                 sleep(config.IMAGE_DOWNLOAD_DELAY)
                 ok, filename = notification_obj.attachment_content_save(content_id=attachment['id'], 
                                                                     filename=attachment_id_name(attachment))
-                if ok:  # если скачиваени прошло хорошо
+                if ok:  # если скачивание прошло хорошо
                     large_img_resize(attachment_id_name(attachment), config.IMG_MAX_SIZE_XY, config.IMG_MAX_SIZE_BYTES)
                     with open(attachment_id_name(attachment), 'rb') as attachment_file:
                         data = attachment_file.read() 
@@ -169,18 +159,17 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
                     log.error(f'cant download attachment {href} {attachment_id_name(attachment)}')
             
             try:
-                res = bot.send_media_group(chat_id, media_group)
+                bot.send_media_group(chat_id, media_group)
             except ApiTelegramException as e:
-                log.error(f'{chat_id = }\nerror - {e.description}')
-                exit(123)
-
-            log.info(f'{res = }')
-            sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
+                telebot_exception_handler(chat_id, e)
 
         else: # нет изображений
-            bot.send_message(chat_id, lot_info, disable_web_page_preview=True)
-            sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
-        # bot.send_message(chat_id, f'{Telegram.emoji["arrow_up"]} [{notice_number}]({href})', parse_mode='MarkdownV2')
+            try:
+                bot.send_message(chat_id, lot_info, disable_web_page_preview=True)
+            except ApiTelegramException as e:
+                telebot_exception_handler(chat_id, e)
+
+        sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
         del_file_attachment_id_name(img_ids)
 
 
@@ -295,10 +284,7 @@ def main():
 
 if __name__ == '__main__':
     sys.excepthook = my_exception_hook
-    log = app_logger.get_logger(config.log_name)
-    torgi = TorgiGovRu()
-    n = Notification()
-    bot=TeleBot(config.BOT_TOKEN, parse_mode=config.DEFAULT_PARSE_MODE)
+
     main()
 
 
