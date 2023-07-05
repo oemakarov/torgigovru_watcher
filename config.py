@@ -43,7 +43,8 @@ DELETE_TIME_DELTA_DAYS = 50
 
 
 BOT_ERRORS = {
-    'BLOCKED_BY_USER' : 'Bot was blocked by the user'
+    'BLOCKED_BY_USER' : 'Bot was blocked by the user',
+    'FLOOD_CONTROL' : 'Too Many Requests: retry after '
 }
 
 

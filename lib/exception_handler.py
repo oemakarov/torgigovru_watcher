@@ -1,6 +1,7 @@
 from lib.telegram import Telegram
 import sys
 from telebot.apihelper import ApiTelegramException
+from time import sleep
 
 import config
 from __version__ import __version__
@@ -15,6 +16,10 @@ def telebot_exception_handler(user_id: str, e: ApiTelegramException):
         log.info('***** DEL_ALL_USER_SEARCHES')
         exit(1)
         # raise e  # выходим для перезагрузки пользовательских растроек после удаления
+    elif e.description.startswith(config.BOT_ERRORS['FLOOD_CONTROL']):
+        delay = e.description.replace(config.BOT_ERRORS['FLOOD_CONTROL'], '')
+        log.info(f'FLOOD CONTROL. sleep {delay}')
+        sleep(int(delay))
     else:
         log.error(f'{user_id = }\n{e.description}')
 

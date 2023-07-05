@@ -1,8 +1,11 @@
 
-__version__ = '0.36'
+__version__ = '0.37'
 # 'москва+авто'
 # '*частьслова*+обособленноеслово+@92'
 
+
+# v0.37
+# - flood control handler for telegram exception
 
 # v0.36
 # - telebot_exception_handler для обработки ошибок отправки сообщений
