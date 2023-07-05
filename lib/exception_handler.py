@@ -12,7 +12,9 @@ from init import log
 def telebot_exception_handler(user_id: str, e: ApiTelegramException):
     if e.description == config.BOT_ERRORS['BLOCKED_BY_USER']:
         del_all_user_searches(user_id, log)
-        raise e  # выходим для перезагрузки пользовательских растроек после удаления
+        log.info('***** DEL_ALL_USER_SEARCHES')
+        exit(1)
+        # raise e  # выходим для перезагрузки пользовательских растроек после удаления
     else:
         log.error(f'{user_id = }\n{e.description}')
 

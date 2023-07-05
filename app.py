@@ -160,13 +160,16 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
             
             try:
                 bot.send_media_group(chat_id, media_group)
+            # except Exception as e:
             except ApiTelegramException as e:
+                log.info('EXCEPTION')
                 telebot_exception_handler(chat_id, e)
 
         else: # нет изображений
             try:
                 bot.send_message(chat_id, lot_info, disable_web_page_preview=True)
             except ApiTelegramException as e:
+                log.info('EXCEPTION')
                 telebot_exception_handler(chat_id, e)
 
         sql.add_lot_sended(reg_num=notice_number, lot_num=lot_number, user_id=chat_id)
