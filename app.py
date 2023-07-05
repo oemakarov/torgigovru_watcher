@@ -33,7 +33,7 @@ from lib.tools import (
     fields_to_dict_from_list,
     compose_lot_link,
 )
-from services.exeption_handler import my_exception_hook, telebot_exception_handler
+from services.exception_handler import my_exception_hook, telebot_exception_handler
 
 
 def process_notification(notification_obj: Notification, notice_info: dict, bot: TeleBot, chat_id: str, send_link: int):
