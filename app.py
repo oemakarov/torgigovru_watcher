@@ -162,7 +162,7 @@ def process_notification(notification_obj: Notification, notice_info: dict, bot:
                 bot.send_media_group(chat_id, media_group)
             # except Exception as e:
             except ApiTelegramException as e:
-                log.info('EXCEPTION')
+                log.warning('EXCEPTION')
                 telebot_exception_handler(chat_id, e)
 
         else: # нет изображений

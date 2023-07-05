@@ -1,8 +1,11 @@
 
-__version__ = '0.37'
+__version__ = '0.38'
 # 'москва+авто'
 # '*частьслова*+обособленноеслово+@92'
 
+
+# v0.38
+# - BLOCKED_BY_USER edit description text
 
 # v0.37
 # - flood control handler for telegram exception
