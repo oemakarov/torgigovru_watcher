@@ -44,7 +44,8 @@ DELETE_TIME_DELTA_DAYS = 50
 
 BOT_ERRORS = {
     'BLOCKED_BY_USER' : 'Forbidden: failed to send message #1 with the error message "Bot was blocked by the user"',
-    'FLOOD_CONTROL' : 'Too Many Requests: retry after '
+    'FLOOD_CONTROL' : 'Too Many Requests: retry after ',
+    'USER_BLOCKED' : 'USER_IS_BLOCKED',
 }
 
 
