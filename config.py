@@ -16,12 +16,12 @@ _log_format_debug_file = '[%(asctime)s.%(msecs)03d] [%(levelname)s] %(message)s'
 _log_format_print = '|%(lineno)d| %(filename)s - %(funcName)s - %(message)s'
 datefmt='%Y-%m-%d %H:%M:%S'
 
-ADMIN_USER_ID = config_secret.ADMIN_USER_ID
-
 DAYS_DEEP_NOTICE_WATCH= 1
 HREF_TRY_LIMIT_ADMIN_ALERT = 5
 
+ADMIN_USER_ID = config_secret.ADMIN_USER_ID
 BOT_TOKEN = config_secret.BOT_TOKEN
+
 TELEGRAM_MESSAGE_LIMIT = 4000 # длина сообщения в телеграм
 TELEGRAM_MESSAGE_CAPTION_LIMIT = 1000 #длина описания для картинки в телеграм
 TELEGRAM_MESSAGE_DELAY = 0.2 #задержка после отправки сообщения в телегу, чтобы не напороться на антифлуд

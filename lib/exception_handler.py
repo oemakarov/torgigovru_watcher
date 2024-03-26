@@ -35,6 +35,6 @@ def my_exception_hook(exctype, value, traceback):
     if exctype != SystemExit:
         error_text = '\nКритическая ошибка.\n\nERROR : ' + str(value) + '\n' + str(traceback.tb_frame) + '\nline no : ' + str(traceback.tb_lineno)
         error_text_caption = f'{config.log_name} v{__version__}\n`{error_text}`'
-        telegram = Telegram()
+        telegram = Telegram(bot_token=config.BOT_TOKEN, chat_id=config.ADMIN_USER_ID)
         telegram.send_message(error_text_caption)
     sys.exit(1)

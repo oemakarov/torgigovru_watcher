@@ -3,9 +3,6 @@ import requests
 
 class Telegram(object):
 
-    DEFAULT_BOT_TOKEN = '1789291819:AAFUjHmBLd_VnAStcBix9bq0n0J53Ui4L7U'  # @dzin_reminder_bot
-    DEFAULT_CHAT_ID = '55562319'  #  @oemakarov
-
     URL_API_BASE = 'https://api.telegram.org/bot'
     METHOD_SEND_MESSAGE = '/sendMessage'
     METHOD_SEND_DOCUMENT = '/sendDocument'
@@ -65,14 +62,9 @@ class Telegram(object):
 
     def __init__(self, bot_token=None, chat_id=None, proxy=None, parse_mode='Markdown'):
         
-        
-        # if not bot_token:
-        self.bot_token = bot_token or self.DEFAULT_BOT_TOKEN
-            
+        self.bot_token = bot_token 
         self.URL_API = self.URL_API_BASE + self.bot_token
-        
-        if not chat_id:
-            self.chat_id = self.DEFAULT_CHAT_ID
+        self.chat_id = chat_id
 
         self.session = requests.Session()
         if proxy:
