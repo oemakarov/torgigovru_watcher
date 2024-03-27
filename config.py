@@ -16,7 +16,7 @@ _log_format_debug_file = '[%(asctime)s.%(msecs)03d] [%(levelname)s] %(message)s'
 _log_format_print = '|%(lineno)d| %(filename)s - %(funcName)s - %(message)s'
 datefmt='%Y-%m-%d %H:%M:%S'
 
-DAYS_DEEP_NOTICE_WATCH= 1
+DAYS_DEEP_NOTICE_WATCH= 2
 HREF_TRY_LIMIT_ADMIN_ALERT = 5
 
 ADMIN_USER_ID = config_secret.ADMIN_USER_ID
